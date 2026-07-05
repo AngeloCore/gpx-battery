@@ -1,3 +1,7 @@
+<p align="center">
+   <img alt="logo" src="./assets/app.ico"/>
+</p>
+
 # GPX Battery
 
 A tiny, portable Windows tray app that shows the battery percentage of Logitech
