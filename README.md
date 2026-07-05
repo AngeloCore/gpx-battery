@@ -8,12 +8,11 @@ A tiny, portable Windows tray app that shows the battery percentage of Logitech
 wireless mice (built for the G Pro X Superlight 2, works with any HID++ 2.0
 Logitech mouse). No G HUB required, no runtime dependencies — a single exe.
 
-[!TIP]
 Made with performance in mind using **Rust**, the thread runs only when you want it to. 
 
 <details>
 
-<summary>Preview</summary>
+<summary>👀 Preview</summary>
 
 ![screenshot](./assets/Shot3.png)
 ![screenshot](./assets/Shot1.png)
