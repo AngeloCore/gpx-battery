@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tray::{TrayManager, UserAction};
 use tray_icon::menu::MenuEvent;
-use winutil::{MainWaker, WM_APP_DEVCHANGE, WM_APP_WAKE, wide};
+use winutil::{MainWaker, WM_APP_DEVCHANGE, WM_APP_SHOWUI, WM_APP_WAKE, wide};
 
 use windows_sys::Win32::Foundation::{
     ERROR_ALREADY_EXISTS, GetLastError, HWND, LPARAM, LRESULT, WPARAM,
@@ -27,12 +27,19 @@ use windows_sys::Win32::Foundation::{
 use windows_sys::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW};
 use windows_sys::Win32::System::Threading::{CreateMutexW, GetCurrentThreadId};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DBT_DEVNODES_CHANGED, DefWindowProcW, DispatchMessageW, GetMessageW, MSG,
-    PM_NOREMOVE, PeekMessageW, PostQuitMessage, PostThreadMessageW, RegisterClassW,
-    TranslateMessage, WM_DEVICECHANGE, WM_USER, WNDCLASSW,
+    CreateWindowExW, DBT_DEVNODES_CHANGED, DefWindowProcW, DispatchMessageW, GetMessageW,
+    HWND_BROADCAST, MSG, PM_NOREMOVE, PeekMessageW, PostMessageW, PostQuitMessage,
+    PostThreadMessageW, RegisterClassW, RegisterWindowMessageW, TranslateMessage, WM_DEVICECHANGE,
+    WM_USER, WNDCLASSW,
 };
 
 static MAIN_THREAD_ID: AtomicU32 = AtomicU32::new(0);
+/// System-wide message id a second instance broadcasts to say "show yourself".
+static SHOWUI_MESSAGE: AtomicU32 = AtomicU32::new(0);
+
+fn showui_message() -> u32 {
+    unsafe { RegisterWindowMessageW(wide("gpx-battery-show-ui").as_ptr()) }
+}
 
 fn main() {
     ensure_single_instance();
@@ -51,6 +58,7 @@ fn main() {
     }
     let waker = MainWaker::for_current_thread();
     MAIN_THREAD_ID.store(unsafe { GetCurrentThreadId() }, Ordering::Relaxed);
+    SHOWUI_MESSAGE.store(showui_message(), Ordering::Relaxed);
     create_devchange_window();
 
     let settings = Arc::new(Mutex::new(Settings::load()));
@@ -90,6 +98,9 @@ fn main() {
                         last_devchange = Instant::now();
                         let _ = cmd_tx.send(PollCommand::Rescan);
                     }
+                }
+                WM_APP_SHOWUI => {
+                    ui::show_settings();
                 }
                 _ => {
                     TranslateMessage(&msg);
@@ -201,6 +212,9 @@ fn ensure_single_instance() {
         let name = wide("Local\\gpx-battery-single-instance");
         let handle = CreateMutexW(std::ptr::null(), 0, name.as_ptr());
         if handle.is_null() || GetLastError() == ERROR_ALREADY_EXISTS {
+            // Another instance is running: ask it to show its settings window
+            // so launching the exe again gives visible feedback, then bow out.
+            PostMessageW(HWND_BROADCAST, showui_message(), 0, 0);
             std::process::exit(0);
         }
         // Handle is intentionally leaked; the OS holds the mutex for our lifetime.
@@ -267,6 +281,15 @@ extern "system" fn devchange_wndproc(
         if tid != 0 {
             unsafe {
                 PostThreadMessageW(tid, WM_APP_DEVCHANGE, 0, 0);
+            }
+        }
+    }
+    let showui = SHOWUI_MESSAGE.load(Ordering::Relaxed);
+    if showui != 0 && msg == showui {
+        let tid = MAIN_THREAD_ID.load(Ordering::Relaxed);
+        if tid != 0 {
+            unsafe {
+                PostThreadMessageW(tid, WM_APP_SHOWUI, 0, 0);
             }
         }
     }

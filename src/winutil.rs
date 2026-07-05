@@ -5,6 +5,8 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{PostThreadMessageW, WM_APP};
 pub const WM_APP_WAKE: u32 = WM_APP + 1;
 /// Thread message posted by the hidden window when Windows reports a device change.
 pub const WM_APP_DEVCHANGE: u32 = WM_APP + 2;
+/// Thread message posted when a second app instance asks us to show the UI.
+pub const WM_APP_SHOWUI: u32 = WM_APP + 3;
 
 pub fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
