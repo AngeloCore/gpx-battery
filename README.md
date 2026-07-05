@@ -8,6 +8,19 @@ A tiny, portable Windows tray app that shows the battery percentage of Logitech
 wireless mice (built for the G Pro X Superlight 2, works with any HID++ 2.0
 Logitech mouse). No G HUB required, no runtime dependencies — a single exe.
 
+[!TIP]
+Made with performance in mind using **Rust**, the thread runs only when you want it to. 
+
+<details>
+
+<summary>Preview</summary>
+
+![screenshot](./assets/Shot3.png)
+![screenshot](./assets/Shot1.png)
+![screenshot](./assets/Shot2.png)
+
+</details>
+
 ## How it works
 
 1. **Discovery** — the app enumerates HID interfaces with Logitech's vendor id
@@ -49,10 +62,9 @@ the first detected mouse; the app then lives in the system tray.
 
 The app runs on built-in defaults and creates **no files** until you click
 Apply, at which point `settings.json` is written to `%APPDATA%\gpx-battery`
-(shown at the top of the settings window). If a `settings.json` already exists
-next to the exe (portable style), that file is used instead. The red
+(shown at the top of the settings window). The red
 **Delete app data** button removes every file the app has created, disables
-autostart and resets all settings to defaults.
+autostart and resets all settings to defaults. - Full cleanup.
 
 ## Building
 
