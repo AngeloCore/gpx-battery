@@ -10,6 +10,8 @@ Logitech mouse). No G HUB required, no runtime dependencies — a single exe.
 
 Made with performance in mind using **Rust**, the thread runs only when you want it to. 
 
+# [⬇️ DOWNLOAD](https://github.com/AngeloCore/gpx-battery/releases)
+
 <details>
 
 <summary>👀 Preview</summary>
